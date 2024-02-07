@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineSweeper</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body onload="onInit()">
+
+    <h1>Welcome to MineSweeper</h1>
+    <div class="game-over-modal">Game Over!
+        <div><button class="play-againbtn" onclick="onInit()">Play Again</button></div>
+    </div>
+
+    <table class="board-container">
+        <tbody class="board"></tbody>
+    </table>
+
+    <footer>©Amit Frid</footer>
+    <script src="js/game.js"></script>
+    <script src="js/util.js"></script>
+</body>
+</html>
