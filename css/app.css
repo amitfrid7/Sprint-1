@@ -7,9 +7,9 @@ body {
 
 .board-container {
     background-color: #3d737f;
-    margin: 100px auto; 
+    margin: 50px auto; 
     border-radius: 5px;
-    box-shadow: inset -2px -2px 20px 0px #07161b;
+    box-shadow: 0px 1px 20px 2px #3d737f;
 }
 
 .cell {
@@ -22,9 +22,9 @@ body {
     box-shadow: inset -2px -2px 8px 0px #07161b;
 }
 
-.reveal {
-    background-color: red;
-    color: red;
+.cell:hover {
+    transition: 0.5s;
+    box-shadow: inset -2px -2px 8px 0px #8c9fa5;
 }
 
 .game-over-modal {
@@ -33,6 +33,7 @@ body {
     height: 100px;
     width: 300px;
     border: rgba(191, 199, 206, 0.548) 2px solid;
+    box-shadow: 0px 1px 20px 2px #3d737f;
     background-color: #3d737f;
     border-radius: 5px;
     font-size: 36px;
@@ -52,10 +53,20 @@ body {
     background-color: #c7c6c6;
 }
 
-footer {
-    margin-top: 15%;
+.live {
+    height: 40px;
 }
 
-.hide {
-    
+.lives-container {
+    display:contents;
+    width: 40px;
+}
+
+.lives-title {
+    font-size: 24px;
+}
+
+footer {
+    font-size: 24px;
+    margin-top: 15%;
 }
