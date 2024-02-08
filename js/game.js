@@ -2,6 +2,8 @@
 
 var gBoard
 var gSize
+var gTimerInterval
+var gClick
 
 var gLevel = {
     SIZE: 8,
@@ -23,12 +25,13 @@ const FLAG = '🚩'
 
 function onInit() {
     gGame.isOn = true
-    gGame.lives = 10
+    gGame.lives = 3
     gBoard = buildBoard(gSize)
     placeMines()
     setMinesNegsCount()
     renderBoard(gBoard)
     renderLives()
+    renderHints()
     hideModal()
 }
 
@@ -63,7 +66,7 @@ function renderBoard(board) {
                 cell = ' '
             }
             var className = `cell cell-${i}-${j}`
-            strHTML += `<td data-i="${i}" data-j="${j}" class="${className}" oncontextmenu="markCell(this)" onclick="onCellClicked(this)"></td>`
+            strHTML += `<td data-i="${i}" data-j="${j}" class="${className}" oncontextmenu="markCell(this)" onclick="onCellClicked(this, event)"></td>`
         }
         strHTML += '</tr>'
     }
@@ -72,39 +75,47 @@ function renderBoard(board) {
 }
 
 
-function onCellClicked(elCell) {
+function onCellClicked(elCell, ev) {
     var elCellI = +elCell.dataset.i
     var elCellJ = +elCell.dataset.j
+    elCell.classList.add('clicked')
 
+    gClick = true
 
-    if (isVictory()) gameOver()
+    if (gBoard[elCellI][elCellJ].isShown) return
 
-    expandShown(elCell)
-
+    
     if (gBoard[elCellI][elCellJ].isMine) {
-        renderCell({ i: elCellI, j: elCellJ }, MINE)
+        
+        //MODEL
+        gBoard[elCellI][elCellJ].isShown = true
         gGame.lives--
+        
+        //DOM
+        renderCell({ i: elCellI, j: elCellJ }, MINE)
         renderLives()
+        
         if (!gGame.lives) gameOver()
-
+        
     } else {
         var mineNegsCount = gBoard[elCellI][elCellJ].minesAroundCount
-
+        
         //Handles 0 Mine negs
         if (!mineNegsCount) {
             mineNegsCount = ' '
         }
-
+        
         //MODEL
         gBoard[elCellI][elCellJ].isShown = true
-
+        
         //DOM
         renderCell({ i: elCellI, j: elCellJ }, mineNegsCount)
         elCell.innerText = mineNegsCount
+        expandShown(elCell)
     }
 
-    elCell.classList.add('clicked')
-    console.log('gBoard:', gBoard)
+    if (isVictory()) announceWinner()
+    if (!gGame.lives) gameOver()
 }
 
 
@@ -212,9 +223,7 @@ function renderCell(location, value) {
 
 
 function markCell(elCell) {
-
     preventMenu()
-    if (isVictory()) gameOver()
 
     var elCellI = +elCell.dataset.i
     var elCellJ = +elCell.dataset.j
@@ -234,6 +243,9 @@ function markCell(elCell) {
         //DOM
         renderCell({ i: elCellI, j: elCellJ }, FLAG)
     }
+
+    if (isVictory()) announceWinner()
+    if (!gGame.lives) gameOver() 
 }
 
 
@@ -268,6 +280,25 @@ function renderLives() {
     elLives.innerHTML = strHTML
 }
 
+function renderHints() {
+    var strHTML = ''
+    for (let i = 0; i < gGame.lives; i++) {
+        strHTML += `<img class="hint" onclick="useHint(this)" src="img/hint.png">`
+    }
+
+    var elHints = document.querySelector('.hints-container')
+    elHints.innerHTML = strHTML
+}
+
+
+function useHint(elHint) {
+    elHint.style.backgroundColor = 'yellow'
+}
+
+function announceWinner() {
+    const elModal = document.querySelector('.winner-modal')
+    elModal.style.display = 'inline-block'
+}
 
 function gameOver() {
     gGame.isOn = false
@@ -284,6 +315,9 @@ function gameOverModal() {
 function hideModal() {
     const elModal = document.querySelector('.game-over-modal')
     elModal.style.display = 'none'
+    
+    const elWinnerModal = document.querySelector('.winner-modal')
+    elWinnerModal.style.display = 'none'
 
     const elContainer = document.querySelector('.board')
     elContainer.style.display = 'block'
@@ -300,4 +334,34 @@ function getRandomInt(min, max) {
 function preventMenu() {
     const board = document.getElementById("myBoard")
     board.addEventListener("contextmenu", (e) => { e.preventDefault() });
+}
+
+
+//Timer
+function startTimer() {
+
+    if (gTimerInterval) clearInterval(gTimerInterval)
+    const startTime = Date.now()
+    gTimerInterval = setInterval(() => {
+        const timeDiff = Date.now() - startTime
+
+        const seconds = getFormatSeconds(timeDiff)
+        const milliSeconds = getFormatMilliSeconds(timeDiff)
+
+        document.querySelector('span.seconds').innerText =  seconds
+        document.querySelector('span.milli-seconds').innerText = milliSeconds
+
+    }, 10)
+}
+
+
+function getFormatSeconds(timeDiff) {
+    const seconds = Math.floor(timeDiff / 1000)
+    return (seconds + '').padStart(2, '0')
+}
+
+
+function getFormatMilliSeconds(timeDiff) {
+    const milliSeconds = new Date(timeDiff).getMilliseconds()
+    return (milliSeconds + '').padStart(3, '0')
 }

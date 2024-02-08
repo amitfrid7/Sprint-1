@@ -9,14 +9,22 @@
 <body onload="onInit()">
 
     <h1>Welcome to MineSweeper</h1>
-    <div class="lives-title">Lives:
+    <div class="title">Lives:
         <div class="lives-container"></div>
+    </div>
+   
+    <div class="title">Hints:
+        <div class="hints-container"></div>
     </div>
 
     <p>Score: 0</p>
-    <p>Timer: 00:00</p>
 
-
+    <div class="timer-container">
+        <p>
+            Time:  <span class="seconds">00</span>:        
+            <span class="milli-seconds">00</span>
+        </p>
+    </div>
 
     <div>
         <h3>Game Level:</h3>
@@ -26,6 +34,10 @@
     </div>
 
     <div class="game-over-modal">Game Over!
+        <div><button class="play-againbtn" onclick="onInit()">Play Again</button></div>
+    </div>
+
+    <div class="winner-modal">Congrats! You Won!
         <div><button class="play-againbtn" onclick="onInit()">Play Again</button></div>
     </div>
 

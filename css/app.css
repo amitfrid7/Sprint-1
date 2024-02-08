@@ -7,13 +7,13 @@ body {
 
 .board-container {
     background-color: #3d737f;
-    margin: 50px auto; 
+    margin: 20px auto; 
     border-radius: 5px;
     box-shadow: 0px 1px 20px 2px #3d737f;
 }
 
 .clicked {
-    box-shadow: inset -1px -1px 11px 0px #1c262b;
+    box-shadow: inset -1px -1px 12px 5px #253a44;
 }
 
 .cell {
@@ -27,49 +27,100 @@ body {
 }
 
 .cell:hover {
-    transition: 0.5s;
-    box-shadow: inset -2px -2px 8px 0px #8c9fa5;
+    transition: 0.2s;
+    box-shadow: inset -2px -2px 12px 3px #8c9fa5;
+    border: #3d737f 2px solid;
 }
 
 .game-over-modal {
     display: none;
-    margin: 100px auto;
-    height: 100px;
+    margin: 50px auto;
+    height: 120px;
     width: 300px;
     border: rgba(191, 199, 206, 0.548) 2px solid;
     box-shadow: 0px 1px 20px 2px #3d737f;
-    background-color: #3d737f;
+    background-color: #07161b;
     border-radius: 5px;
-    font-size: 36px;
+    font-size: 32px;
+}
+
+.winner-modal {
+    display: none;
+    margin: 50px auto;
+    height: 120px;
+    width: 300px;
+    border: rgba(191, 199, 206, 0.548) 2px solid;
+    box-shadow: 0px 1px 20px 2px #3d737f;
+    background-color: #07161b;
+    border-radius: 5px;
+    font-size: 32px;
 }
 
 .play-againbtn {
-    background-color: #e9e4de;
-    position: relative;
-    margin: auto;
-    height: 35px;
-    border-radius: 5px;
+    margin: 15px 5px;
+    height: 40px;
+    min-width: 120px;
+    border-radius: 15px;
+    background-color:  #2a6674;
+    border: #cec7bf 3px solid;
+    color: #cec7bf;
     cursor: pointer;
+    font-size: 16px;
 }
 
+
 .play-againbtn:hover {
-    transition: 0.5s;
-    background-color: #c7c6c6;
+    transition: 0.3s;
+    background-color: #cec7bf;
+    color: #07161b;
+    border: #3d737f 3px solid;
+    height: 44px;
+    min-width: 132px;
+}
+
+.hint {
+    width: 35px;
+    height: 30px;
+    margin-inline-start: 15px;
+    border-radius: 50%;
+    background-color: #3d737f;
+    border: rgba(191, 199, 206, 0.548) 2px solid;
+    box-shadow: 0px 1px 20px 2px #3d737f;
+}
+
+.hint:hover {
+    transition: 0.3s;
+    background-color: #cec7bf;
+    color: #07161b;
+    border: #3d737f 2px solid;
+    cursor: pointer;
+
 }
 
 .live {
-    height: 40px;
-    margin-inline-start: 10px;
+    width: 35px;
+    height: 30px;
+    margin-inline-start: 15px;
+    border-radius: 50%;
+    background-color: #3d737f;
+    border: rgba(191, 199, 206, 0.548) 2px solid;
+    box-shadow: 0px 1px 20px 2px #3d737f;
 }
+
 
 .lives-container {
     display:contents;
-    width: 40px;
 }
 
-.lives-title {
-    font-size: 24px;
+.title {
+    font-size: 20px;
 }
+
+.hints-container {
+    display: inline-block;
+    margin-top: 40px;
+}
+
 
 p {
     /* display: inline-block; */
@@ -98,7 +149,7 @@ footer {
     transition: 0.5s;
     background-color: #cec7bf;
     color: #07161b;
-    border: #07161b 2px solid;
+    border: #3d737f 2px solid;
     height: 60px;
     min-width: 143px;
 }
