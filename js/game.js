@@ -3,7 +3,7 @@
 var gBoard
 var gSize
 var gTimerInterval
-var gClick
+var gClick = true
 
 var gLevel = {
     SIZE: 8,
@@ -15,11 +15,15 @@ var gGame = {
     shownCount: 0,
     markedCount: 0,
     secsPassed: 0,
-    lives: 3
+    lives: 3,
+    hints: 3
 }
 
+const SAD_SMILEY = '😢'
+const NORMAL_SMILEY = '🙃'
+const SUNGLASSES = '😎'
 
-const MINE = '💣'
+const MINE = '🍄'
 const FLAG = '🚩'
 
 
@@ -27,6 +31,8 @@ function onInit() {
     gGame.isOn = true
     gGame.lives = 3
     gBoard = buildBoard(gSize)
+    clearInterval(gTimerInterval)
+    renderSmiley()
     placeMines()
     setMinesNegsCount()
     renderBoard(gBoard)
@@ -34,7 +40,6 @@ function onInit() {
     renderHints()
     hideModal()
 }
-
 
 function buildBoard(size = 8) {
     const board = []
@@ -50,10 +55,8 @@ function buildBoard(size = 8) {
             }
         }
     }
-
     return board
 }
-
 
 function renderBoard(board) {
     var strHTML = ''
@@ -74,40 +77,38 @@ function renderBoard(board) {
     elContainer.innerHTML = strHTML
 }
 
-
 function onCellClicked(elCell, ev) {
     var elCellI = +elCell.dataset.i
     var elCellJ = +elCell.dataset.j
     elCell.classList.add('clicked')
-
-    gClick = true
+    if (gClick) startTimer()
+    gClick = false
 
     if (gBoard[elCellI][elCellJ].isShown) return
 
-    
     if (gBoard[elCellI][elCellJ].isMine) {
-        
+
         //MODEL
         gBoard[elCellI][elCellJ].isShown = true
         gGame.lives--
-        
+
         //DOM
         renderCell({ i: elCellI, j: elCellJ }, MINE)
         renderLives()
-        
+
         if (!gGame.lives) gameOver()
-        
+
     } else {
         var mineNegsCount = gBoard[elCellI][elCellJ].minesAroundCount
-        
+
         //Handles 0 Mine negs
         if (!mineNegsCount) {
             mineNegsCount = ' '
         }
-        
+
         //MODEL
         gBoard[elCellI][elCellJ].isShown = true
-        
+
         //DOM
         renderCell({ i: elCellI, j: elCellJ }, mineNegsCount)
         elCell.innerText = mineNegsCount
@@ -117,7 +118,6 @@ function onCellClicked(elCell, ev) {
     if (isVictory()) announceWinner()
     if (!gGame.lives) gameOver()
 }
-
 
 function expandShown(elCell) {
     const elCellI = +elCell.dataset.i
@@ -164,9 +164,8 @@ function expandShown(elCell) {
     }
 }
 
-
 function placeMines() {
-    const minesSlots = getRandomLoc()
+    const minesSlots = getRandomMineLoc()
     for (let i = 0; i < minesSlots.length; i++) {
         var currI = minesSlots[i].i
         var currJ = minesSlots[i].j
@@ -174,7 +173,6 @@ function placeMines() {
         gBoard[currI][currJ].isMine = true
     }
 }
-
 
 function countMineNeighbors(cellI, cellJ) {
     var neighborsCount = 0
@@ -191,7 +189,6 @@ function countMineNeighbors(cellI, cellJ) {
     return neighborsCount
 }
 
-
 function setMinesNegsCount() {
     for (let i = 0; i < gBoard.length; i++) {
         for (let j = 0; j < gBoard[0].length; j++) {
@@ -201,8 +198,141 @@ function setMinesNegsCount() {
     }
 }
 
+function renderCell(location, value) {
+    const elCell = document.querySelector(`.cell-${location.i}-${location.j}`)
+    elCell.innerText = value
+}
 
-function getRandomLoc() {
+function markCell(elCell) {
+    preventMenu()
+    
+    var elCellI = +elCell.dataset.i
+    var elCellJ = +elCell.dataset.j
+    
+    if (gBoard[elCellI][elCellJ].isMarked) {
+        
+        //MODEL
+        gBoard[elCellI][elCellJ].isMarked = false
+        
+        //DOM
+        renderCell({ i: elCellI, j: elCellJ }, ' ')
+    } else {
+        
+        //MODEL
+        gBoard[elCellI][elCellJ].isMarked = true
+        
+        //DOM
+        renderCell({ i: elCellI, j: elCellJ }, FLAG)
+    }
+    
+    renderSmiley()
+    if (isVictory()) announceWinner()
+    if (!gGame.lives) gameOver()
+}
+
+function onSetLevel(level) {
+    gLevel.SIZE = level
+    if (level === 4) gLevel.MINES = 2
+    if (level === 8) gLevel.MINES = 14
+    if (level === 12) gLevel.MINES = 32
+    onInit()
+}
+
+function renderSmiley(value = NORMAL_SMILEY) {
+    const elSmiley = document.querySelector(`.smiley`)
+    elSmiley.innerText = value
+}
+
+function renderLives() {
+    var strHTML = ''
+    for (let i = 0; i < gGame.lives; i++) {
+        strHTML += `<img class="live" src="img/heart.png">`
+    }
+    
+    var elLives = document.querySelector('.lives-container')
+    elLives.innerHTML = strHTML
+}
+
+function renderHints() {
+    var strHTML = ''
+    for (let i = 0; i < gGame.lives; i++) {
+        strHTML += `<img class="hint" onclick="useHint(this)" src="img/hint.png">`
+    }
+    
+    var elHints = document.querySelector('.hints-container')
+    elHints.innerHTML = strHTML
+}
+
+function useHint(elHint) {
+    if (gGame.hints) {
+        elHint.style.backgroundColor = 'yellow'
+        var notMineCells = []
+        for (let i = 0; i < gBoard.length; i++) {
+            for (let j = 0; j < gBoard[0].length; j++) {
+                const currCell = gBoard[i][j]
+                if (!currCell.isMine && !currCell.isShown) notMineCells.push({ i: i, j: j })
+            }
+    }
+
+        var randIdx = getRandomInt(0, notMineCells.length)
+        var hintedCell = notMineCells[randIdx]
+        const elCell = document.querySelector(`.cell-${hintedCell.i}-${hintedCell.j}`)
+        elCell.classList.add('reveal')
+        
+        setTimeout(() => {
+            elCell.classList.remove('reveal')
+            elCell.classList.add('unreveal')
+            
+        }, 1000)
+        gGame.hints--
+    }
+}
+
+function isVictory() {
+    for (let i = 0; i < gBoard.length; i++) {
+        for (let j = 0; j < gBoard[0].length; j++) {
+            const currCell = gBoard[i][j]
+            if (currCell.isShown) continue
+            else if (currCell.isMine && currCell.isMarked) continue
+            else return
+        }
+    }
+    renderSmiley(SUNGLASSES)
+    clearInterval(gTimerInterval)
+    return true
+}
+
+function announceWinner() {
+    const elModal = document.querySelector('.winner-modal')
+    elModal.style.display = 'inline-block'
+    if (gTimerInterval) clearInterval(gTimerInterval)
+}
+
+function gameOver() {
+    gGame.isOn = false
+    gameOverModal()
+    renderSmiley(SAD_SMILEY)
+    clearInterval(gTimerInterval)
+}
+
+function gameOverModal() {
+    const elModal = document.querySelector('.game-over-modal')
+    elModal.style.display = 'inline-block'
+    
+}
+
+function hideModal() {
+    const elModal = document.querySelector('.game-over-modal')
+    elModal.style.display = 'none'
+    
+    const elWinnerModal = document.querySelector('.winner-modal')
+    elWinnerModal.style.display = 'none'
+    
+    const elContainer = document.querySelector('.board')
+    elContainer.style.display = 'block'
+}
+
+function getRandomMineLoc() {
     const randomLocations = []
 
     for (let i = 0; i < gLevel.MINES; i++) {
@@ -215,151 +345,38 @@ function getRandomLoc() {
     return randomLocations
 }
 
-
-function renderCell(location, value) {
-    const elCell = document.querySelector(`.cell-${location.i}-${location.j}`)
-    elCell.innerText = value
-}
-
-
-function markCell(elCell) {
-    preventMenu()
-
-    var elCellI = +elCell.dataset.i
-    var elCellJ = +elCell.dataset.j
-
-    if (gBoard[elCellI][elCellJ].isMarked) {
-
-        //MODEL
-        gBoard[elCellI][elCellJ].isMarked = false
-
-        //DOM
-        renderCell({ i: elCellI, j: elCellJ }, ' ')
-    } else {
-
-        //MODEL
-        gBoard[elCellI][elCellJ].isMarked = true
-
-        //DOM
-        renderCell({ i: elCellI, j: elCellJ }, FLAG)
-    }
-
-    if (isVictory()) announceWinner()
-    if (!gGame.lives) gameOver() 
-}
-
-
-function isVictory() {
-    for (let i = 0; i < gBoard.length; i++) {
-        for (let j = 0; j < gBoard[0].length; j++) {
-            const currCell = gBoard[i][j]
-            if (currCell.isShown) continue
-            else if (currCell.isMine && currCell.isMarked) continue
-            else return
-        }
-    }
-    return true
-}
-
-function onSetLevel(level) {
-    gLevel.SIZE = level
-    if (level === 4) gLevel.MINES = 2
-    if (level === 8) gLevel.MINES = 14
-    if (level === 12) gLevel.MINES = 32
-    onInit()
-}
-
-
-function renderLives() {
-    var strHTML = ''
-    for (let i = 0; i < gGame.lives; i++) {
-        strHTML += `<img class="live" src="img/heart.png">`
-    }
-
-    var elLives = document.querySelector('.lives-container')
-    elLives.innerHTML = strHTML
-}
-
-function renderHints() {
-    var strHTML = ''
-    for (let i = 0; i < gGame.lives; i++) {
-        strHTML += `<img class="hint" onclick="useHint(this)" src="img/hint.png">`
-    }
-
-    var elHints = document.querySelector('.hints-container')
-    elHints.innerHTML = strHTML
-}
-
-
-function useHint(elHint) {
-    elHint.style.backgroundColor = 'yellow'
-}
-
-function announceWinner() {
-    const elModal = document.querySelector('.winner-modal')
-    elModal.style.display = 'inline-block'
-}
-
-function gameOver() {
-    gGame.isOn = false
-    gameOverModal()
-}
-
-
-function gameOverModal() {
-    const elModal = document.querySelector('.game-over-modal')
-    elModal.style.display = 'inline-block'
-}
-
-
-function hideModal() {
-    const elModal = document.querySelector('.game-over-modal')
-    elModal.style.display = 'none'
-    
-    const elWinnerModal = document.querySelector('.winner-modal')
-    elWinnerModal.style.display = 'none'
-
-    const elContainer = document.querySelector('.board')
-    elContainer.style.display = 'block'
-}
-
-
 function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
-
 function preventMenu() {
     const board = document.getElementById("myBoard")
     board.addEventListener("contextmenu", (e) => { e.preventDefault() });
 }
 
-
 //Timer
 function startTimer() {
+    const startTime = Date.now()
 
     if (gTimerInterval) clearInterval(gTimerInterval)
-    const startTime = Date.now()
     gTimerInterval = setInterval(() => {
         const timeDiff = Date.now() - startTime
 
         const seconds = getFormatSeconds(timeDiff)
         const milliSeconds = getFormatMilliSeconds(timeDiff)
 
-        document.querySelector('span.seconds').innerText =  seconds
+        document.querySelector('span.seconds').innerText = seconds
         document.querySelector('span.milli-seconds').innerText = milliSeconds
 
     }, 10)
 }
 
-
 function getFormatSeconds(timeDiff) {
     const seconds = Math.floor(timeDiff / 1000)
     return (seconds + '').padStart(2, '0')
 }
-
 
 function getFormatMilliSeconds(timeDiff) {
     const milliSeconds = new Date(timeDiff).getMilliseconds()
