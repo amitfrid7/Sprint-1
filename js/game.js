@@ -5,7 +5,7 @@ var gSize
 
 var gLevel = {
     SIZE: 8,
-    MINES: 4
+    MINES: 12
 }
 
 var gGame = {
